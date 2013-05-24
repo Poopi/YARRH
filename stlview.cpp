@@ -1,12 +1,5 @@
 #include <QtGui>
 #include <QtOpenGL>
-#if defined(Q_WS_MAC)
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#elif defined(Q_WS_WIN)||defined(Q_WS_X11)
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
 #include <math.h>
 #include "stlview.h"
 
@@ -198,7 +191,9 @@ void StlView::mousePressEvent(QMouseEvent *event)
             this->originalScale=1.0;
             this->oryginalScales=getScales();
         }
-        emit selectedCors(getSelectedObjectsCords().at(0).toPointF());
+        emit selectedCors(getSelectedObjectsCords().at(0).toPointF());       
+        emit selectedShowAngles(this->objects.value(this->selectedObjects.last())->get_showAngles());
+        emit selectedShowSupport(this->objects.value(this->selectedObjects.last())->get_showSupport());
     }
 }
 
@@ -429,8 +424,6 @@ void StlView::initializeGL()
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_COLOR_MATERIAL);
     glEnable(GL_NORMALIZE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 //    static GLfloat lightPosition[4] = { 0.5, 5.0, 7.0, 1.0 };
 //    glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 //    GLfloat specular[] = {1.0f, 1.0f, 1.0f , 1.0f};
@@ -860,6 +853,20 @@ void StlView::rotateObject(double ang){
     updateGL();
 }
 
+void StlView::setShowAngles(bool show){
+    for(int i=0; i<this->selectedObjects.size(); i++){
+        this->objects.value(this->selectedObjects.at(i))->set_showAngles(show);
+    }
+    updateGL();
+}
+
+void StlView::setShowSupport(bool show){
+    for(int i=0; i<this->selectedObjects.size(); i++){
+        this->objects.value(this->selectedObjects.at(i))->set_showSupport(show);
+    }
+    updateGL();
+}
+
 void StlView::scaleObject(double scale){
     QVector3D temp;
     QMatrix4x4 matrix;
@@ -1060,4 +1067,13 @@ void StlView::setActiveTool(int tool){
 void StlView::setLayerNum(int value){
     this->layerNum=value;
     updateGL();
+}
+
+//support stuff
+
+void StlView::generateSupport(qreal treshold){
+        for(int i=0; i<this->selectedObjects.size(); i++){
+            this->objects.value(this->selectedObjects.at(i))->generateSupport(treshold);
+        }
+        updateGL();
 }
